@@ -10,7 +10,7 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 	private ImButton animButton;//スケッチのアニメーションボタン
 	private ImButton chgCanvasButton;//キャンバス変更ボタン
 
-	private RoundButton takeButton;//撮影用の丸ボタン
+//	private RoundButton takeButton;//撮影用の丸ボタン
 
 	private color[] penColor;//ペン色 ロードした画像データから取得する
 	public int nowColorNumber, nowAxisNumber, nowToolNumber, nowDataNumber, nowThicknessNumber;//ボタンの選択状態
@@ -29,8 +29,8 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 	private char keyConfig[];
 	float Y;//ツールバーの高さ
 
-	public Tool() {
-		super(0, 0, 60, height);//全体の大きさ
+	public Tool(int x, int w) {
+		super(x, 0, w, height);//全体の大きさ
 
 		PImage g;
 		//最初に選んでおくボタン
@@ -122,7 +122,7 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		Y=Y+26+13;
 		animButton=new ImButton(loadImage("icon-anim.png"), 6, Y, 48, 24);
 
-		takeButton = new RoundButton(loadImage("icon-cng1.png"), width-20, 10, 150);
+//		takeButton = new RoundButton(loadImage("icon-cng1.png"), width-20, 10, 150);
 
 		Y=Y+26+13; 
 		chgCanvasButton = new ImButton(loadImage("icon-anim.png"), 6, Y, 48, 24);
@@ -358,40 +358,40 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		}
 
 		//撮影ボタン
-		takeButton.update(mouseX-getX(), mouseY-getY());
-		if (takeButton.isPressed) {
-
-			takeButton.setSelected(false);
-			println("clicked");
-
-			//=====
-
-			println("カメラ-キャンバスの切り替え");
-			movButton.setSelected(false);
-			movButton.no=!movButton.no;
-			println(movButton.no);
-			if (movButton.no) {
-				song.rewind();//reload to play
-				song.play();//play SE
-			}
-
-			if (!movButton.no) movButton.setSelected(true);
-			//枠線をつける
-			if (movButton.no) data.get(nowDataNumber).saveSketch();//自動保存
-			//写真をとったらツールを鉛筆に変更する
-			toolButton[nowToolNumber].setSelected(false);//現在のボタンの選択を解除
-			//移動ボタンの表示を非表示に設定
-			toolButton_chg.setSelected(false);
-			nowToolNumber=0;//ツールを鉛筆に変更
-			toolButton[nowToolNumber].setSelected(true);//選択表示を鉛筆に変更
-
-
-			if (oldToolNumber==tool.nowToolNumber) {//もし複数回クリックならば
-				println("切り替えボタン/複数回クリック:number"+oldToolNumber);
-			} else {
-				UseShot.oldToolNumber=nowToolNumber;
-			}
-		}
+//		takeButton.update(mouseX-getX(), mouseY-getY());
+//		if (takeButton.isPressed) {
+//
+//			takeButton.setSelected(false);
+//			println("clicked");
+//
+//			//=====
+//
+//			println("カメラ-キャンバスの切り替え");
+//			movButton.setSelected(false);
+//			movButton.no=!movButton.no;
+//			println(movButton.no);
+//			if (movButton.no) {
+//				song.rewind();//reload to play
+//				song.play();//play SE
+//			}
+//
+//			if (!movButton.no) movButton.setSelected(true);
+//			//枠線をつける
+//			if (movButton.no) data.get(nowDataNumber).saveSketch();//自動保存
+//			//写真をとったらツールを鉛筆に変更する
+//			toolButton[nowToolNumber].setSelected(false);//現在のボタンの選択を解除
+//			//移動ボタンの表示を非表示に設定
+//			toolButton_chg.setSelected(false);
+//			nowToolNumber=0;//ツールを鉛筆に変更
+//			toolButton[nowToolNumber].setSelected(true);//選択表示を鉛筆に変更
+//
+//
+//			if (oldToolNumber==tool.nowToolNumber) {//もし複数回クリックならば
+//				println("切り替えボタン/複数回クリック:number"+oldToolNumber);
+//			} else {
+//				UseShot.oldToolNumber=nowToolNumber;
+//			}
+//		}
 		chgCanvasButton.update(mouseX-getX(), mouseY-getY());
 		if(chgCanvasButton.isPressed){
 			println("キャンバスの表示切り替え");
@@ -450,7 +450,7 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		resetMoveButton.draw(mouseX-getX(), mouseY-getY());
 		animButton.draw(mouseX-getX(), mouseY-getY());
 		toolButton_chg.draw(mouseX-getX(), mouseY-getY());
-		takeButton.draw(mouseX-getX(), mouseY-getY());
+//		takeButton.draw(mouseX-getX(), mouseY-getY());
 		chgCanvasButton.draw(mouseX-getX(), mouseY-getY());
 
 		fill(0);

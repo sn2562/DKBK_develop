@@ -313,8 +313,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		for (int i=0; i<trealWorldMap.length; i++) {
 			realWorldMap[i]=trealWorldMap[i];
 		}
-
-
+		
 		for (int i=0; i<realWorldMap.length; i++) {
 			realWorldMap_back[i]=new PVector();
 			realWorldMap_back[i].set(realWorldMap[i].x, realWorldMap[i].y, realWorldMap[i].z);
@@ -322,15 +321,14 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 	}
 
 	public void setCanvasMatrix(PGraphics cv) {//移動量を反映
-		cv.translate(width/2, height/2);
+		cv.translate(data_width/2, data_height/2);
 		cv.rotateX(rotX);
 		cv.rotateY(rotY);
 		cv.rotateY(rotZ);
-		cv.scale(0.575f*width/img.width);
+		cv.scale(0.575f*data_width/img.width);
 		cv.translate(0, 0, -1000);
 		cv.translate(pos.x, pos.y, pos.z);
 	}
-
 	public void updateDKBKCanvas(PGraphics cv, SimpleOpenNI context) {
 		pushMatrix();
 		//描画モードによって表示内容を変える
@@ -338,9 +336,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		//	1 スケッチの表示
 		//	2 深度データの表示
 		//	3 非表示
-
 		switch(draw_mode){
-
 			case 0:
 				cv.hint(DISABLE_DEPTH_TEST);//レンダラを2Dに変える
 				//画像を描画-ただし、さっきまで画面に表示されていたカメラの写真に変更されている
@@ -370,8 +366,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 					cv.strokeWeight(1);
 				}
 				break;
-
-
 			case 2:
 				setCanvasMatrix(cv);
 
@@ -392,7 +386,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 
 				break;
 		}
-
 		popMatrix();
 	}
 
@@ -762,7 +755,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			}
 
 			img=createImage(w, h, ARGB);//画像を扱うためのバッファを作る
-			println("つくったがぞうさいず"+w+" "+height);
+//			println("つくったがぞうさいず"+w+" "+height);
 			//img.pixels=c;//バッファの色データを読み込んだオブジェで書き換える
 			img.pixels=c;//バッファの色データを読み込んだオブジェで書き換える
 

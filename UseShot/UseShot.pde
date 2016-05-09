@@ -96,7 +96,7 @@ void setup() {
 
 	FilePath1=dataPath("")+"/todai_horiken7.dsd";
 
-	tool=new Tool();//ツールバー
+	tool=new Tool(width-61,60)	;//ツールバー tool(x座標,幅)
 	take=new TakeShot(this);//テイクショット
 
 	//初期データの読み込み
@@ -108,10 +108,10 @@ void setup() {
 		data.add(new Data(true));//空のデータを入れておく
 	}
 	//表示について
-	perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
+//	perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
 	float z0 = (height/2)/tan(PI/8);//tan(radian(45/2))を使うと、微妙に数字がズレるのでダメ
 	//カメラの位置を決める
-	camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
+//	camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
 
 	pmousePressed=false;
 
@@ -119,7 +119,7 @@ void setup() {
 	minim = new Minim( this );
 	song = minim.loadFile( "CameraFlash.wav" );
 
-	cv = createGraphics(width, height, P3D);//Depth表示用キャンバスの作成
+	cv = createGraphics(data_width, data_height, P3D);//Depth表示用キャンバスの作成
 }
 
 void draw() {
@@ -131,7 +131,6 @@ void draw() {
 		animFrame++;
 		frameset=(animFrame-1)/framecount;
 		//表示するデータ番号を出力
-
 		//tool.nowDataNumberを変更する
 		tool.nowDataNumber=frameset%data.size();
 		//println(frameset+":"+tool.moveWriter);
@@ -159,10 +158,10 @@ void draw() {
 
 		//DKBKキャンバスの描画
 		cv.beginDraw();
-		float z0 = (height/2)/tan(PI/8);//tan(radian(45/2))を使うと、微妙に数字がズレるのでダメ
+		float z0 = (data_height/2)/tan(PI/8);//tan(radian(45/2))を使うと、微妙に数字がズレるのでダメ
 		cv.background(252, 251, 246);//キャンバス背景色
-		cv.perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
-		cv.camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
+		cv.perspective(PI/4, float(data_width)/float(data_height), 10, 150000);//視野角は45度
+		cv.camera(data_width/2, data_height/2, z0, data_width/2, data_height/2, 0, 0, 1, 0);
 		data.get(tool.nowDataNumber).updateDKBKCanvas(cv, context);//キャンバスの表示内容を設定
 		cv.endDraw();
 
