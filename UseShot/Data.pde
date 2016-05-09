@@ -25,7 +25,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 	private PVector[] projectionMap;//projectionMapは回転後を見るために使う
 	public String dataname="";
 
-//	private String Savepath = "/Users/kawasemi/Desktop/dsdData/";//mac版/選択したファイル
+	//	private String Savepath = "/Users/kawasemi/Desktop/dsdData/";//mac版/選択したファイル
 
 	//private String Savepath="C:\\Users\\imlab\\Desktop\\dsdData\\kikuchi"+year()+month()+day()+hour()+"_"+minute()+"_"+second()+".dsd";//windows版
 	//private String Savepath="C:\\Users\\sumi_000\\Desktop\\dsdData\\oikawa"+year()+month()+day()+hour()+"_"+minute()+"_"+second()+".dsd";//windows版
@@ -177,26 +177,12 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 					if (n>0) {
 						tool.setSpoit(sum/n);//平均値を算出して出力
 					}
-					//回転後のスポイト機能を実装する。
-
-					//回転しているとき
-					/*
-        if (!(pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {
-         //インデックスを計算する
-         int idx=x+y*img.width;
-         PVector pv = new PVector(projectionMap[idx].x, projectionMap[idx].y, projectionMap[idx].z);
-
-         //3. 2で取得できたpv(x,y,z)をunProjectScreenに入れて、モデル内座標を得る
-         pv.set(unprojectScreen(pv));
-
-         tool.setSpoit(pv.z);
-         }
-         */
 
 					break;
 			}
 		}
 	}
+
 
 	public void redo() {//元に戻す
 		if (lines.size()==0)return;
@@ -238,20 +224,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			}
 		}
 		popMatrix();
-		/*
-    //1.正面から見た時のx,y,zの値はrealWorldMapに入っている
-     //この値を使ってprojectionMapにはProjectScreenした現在の視点から見えているrealWorldMap(=projectionMap)を作成する
-     for ( int dx=0; dx<width; dx++) {
-     for (int dy=0; dy<height; dy++) {
-     int idx2=dx+dy*width;//どこかでidxて使ってたっけ？
-     //idx2に値が入っていないときは参照しない
-     if (idx2>0&&idx2<realWorldMap.length) {//配列の範囲内だけ処理する
-     PVector pv = new PVector(realWorldMap[idx2].x, realWorldMap[idx2].y, realWorldMap[idx2].z);//値を参照する
-     projectionMap[idx2].set(projectScreen(pv));//projectionMap配列を作り直す
-     }
-     }
-     }
-     */
 	}
 	public void move(float x, float y) {
 		shouldupdate=true;
@@ -295,6 +267,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		translate(pos.x, pos.y, pos.z);
 	}
 
+
 	public void cameraupdate(PImage timg, int tdepthMap[], PVector[] trealWorldMap) {
 		//frame.setTitle("DKBK Now Loading...");
 		pos=new PVector();
@@ -313,7 +286,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		for (int i=0; i<trealWorldMap.length; i++) {
 			realWorldMap[i]=trealWorldMap[i];
 		}
-
 
 		for (int i=0; i<realWorldMap.length; i++) {
 			realWorldMap_back[i]=new PVector();
@@ -349,65 +321,78 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		}
 	}
 
-	public void update() {
+	public void setCanvasMatrix(PGraphics cv) {//移動量を反映
+		cv.translate(width/2, height/2);
+		cv.rotateX(rotX);
+		cv.rotateY(rotY);
+		cv.rotateY(rotZ);
+		cv.scale(0.575f*width/img.width);
+		cv.translate(0, 0, -1000);
+		cv.translate(pos.x, pos.y, pos.z);
+	}
+
+	public void updateDKBKCanvas(PGraphics cv, SimpleOpenNI context) {
 		pushMatrix();
-		if (draw_mode==3) {
-			//非表示の時に行いたい処理
+		//描画モードによって表示内容を変える
+		//	0 写真の表示
+		//	1 スケッチの表示
+		//	2 深度データの表示
+		//	3 非表示
+
+		switch(draw_mode){
+
+			case 0:
+				cv.hint(DISABLE_DEPTH_TEST);//レンダラを2Dに変える
+				//画像を描画-ただし、さっきまで画面に表示されていたカメラの写真に変更されている
+				cv.tint(255, 120);//半透明にする
+				cv.image(img, 0, 0, cv.width, cv.height);//画像データの表示
+				cv.tint(255, 255);//透明度を元に戻す
+				cv.hint(ENABLE_DEPTH_TEST);//終了
+				break;
+				
+			case 1:
+				setCanvasMatrix(cv);
+				cv.noFill();
+				for (DT line : lines) {
+					//if (!line.ableDraw())continue;
+					cv.stroke(line.c);
+					cv.strokeWeight(line.w);
+					if (line.beginShape()==-1)
+						cv.beginShape();
+					else
+						cv.beginShape(line.beginShape());
+					for (PVector p : line) {
+						cv.vertex(p.x, p.y, p.z);
+						cv.vertex(p.x, p.y, p.z);//vertex一回だとなぜか線をsize()==2の時なぜか線を書いてくれない
+					}
+					cv.endShape();
+					//drawArea();
+					cv.strokeWeight(1);
+				}
+				break;
+
+
+			case 2:
+				setCanvasMatrix(cv);
+
+				cv.strokeWeight(4);
+				for (int y=0; y < img.height; y+=K) {
+					for (int x=0; x < img.width; x+=K) {
+						int index = x + y * img.width;
+						PVector p=realWorldMap_back[index];
+						if (p.z > 0) { 
+							cv.stroke(img.pixels[index]);
+							cv.point(p.x, p.y, p.z);// make realworld z negative, in the 3d drawing coordsystem +z points in the direction of the eye
+						}
+					}
+				}
+				cv.strokeWeight(1);
+				break;
+			case 3:
+
+				break;
 		}
 
-		if (draw_mode==0) {
-			hint(DISABLE_DEPTH_TEST);//二次元描画モード
-			//画像を描画-ただし、さっきまで画面に表示されていたカメラの写真に変更されている
-			//半透明にする
-			tint(255, 120);
-			image(img, 0, 0, width, height);
-			//透明度を元に戻す
-			tint(255, 255);
-			hint(ENABLE_DEPTH_TEST);//終了
-		}
-
-		setMatrix();
-		//他のデータも更新する
-
-		if (draw_mode==2) {
-			//深度データがある場所にピクセルを描画
-			/*
-      loadPixels();
-       img.loadPixels();
-       int isthere[]=new int[pixels.length];
-       for (int iy=0; iy<img.height; iy++)
-       for (int ix=0; ix<img.width; ix++) {
-       PVector p=realWorldMap_back[ix+iy*img.width];
-       if (p.z==0)continue;
-       int x=int(screenX(p.x, p.y, p.z));
-       int y=int(screenY(p.x, p.y, p.z));
-       int z=int(screenZ(p.x, p.y, p.z));
-       if (!(0<=x&&x<width&&0<=y&&y<height))continue;
-       int idx=x+y*width;
-       if (isthere[idx]==0||isthere[idx]>z) {
-       isthere[idx]=z;
-       pixels[idx]=img.pixels[ix+iy*img.width];
-       }
-       }
-
-
-       img.updatePixels();
-       updatePixels();
-
-       */
-		}
-		if (draw_mode!=3)
-			drawLine();
-		popMatrix();
-
-		//todo
-		pushMatrix();
-		setMatrix();
-
-
-		if (draw_mode==2) {
-			drawDepthData();
-		}
 		popMatrix();
 	}
 
@@ -493,39 +478,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		vertex(width*2.5, height*2.5, 6000);
 		vertex(-width*2.5, height*2.5, 6000);
 		endShape(CLOSE);
-
-		//そのほか
-		/*
-    beginShape(LINES);
-     vertex(-width/3, -height/3, 400);
-     vertex(-width*2.5, -height*2.5, 6000);
-
-     vertex(width/3, -height/3, 400);
-     vertex(width*2.5, -height*2.5, 6000);
-
-     vertex(width/3, height/3, 400);
-     vertex(width*2.5, height*2.5, 6000);
-
-     vertex(-width/3, height/3, 400);
-     vertex(-width*2.5, height*2.5, 6000);
-     endShape();
-     */
-
-		//地面も表示する
-		/*
-    beginShape(LINES);
-     stroke(255, 100, 255);
-     int c_count=0;
-     while (c_count<=10) {
-
-
-     vertex(-width/3+(width*2/3/10)*c_count, -height/3, 400);
-     vertex(-width/3+(width*2/3/10)*c_count, -height/3, 6000);
-
-     c_count++;
-     }
-     endShape();
-     */
 	}
 	private void drawDepthData() {//深度データを描画する
 

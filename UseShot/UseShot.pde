@@ -89,10 +89,8 @@ void setup() {
 	}
 	Savepath = path+"/";
 
-
 	frame.setTitle("DKBK");
 	size(int(640*screenZoom), int(480*screenZoom), P3D);
-
 	//線の太さ、初期設定は3
 	setLineW=7;
 
@@ -120,6 +118,8 @@ void setup() {
 	//音源
 	minim = new Minim( this );
 	song = minim.loadFile( "CameraFlash.wav" );
+
+	cv = createGraphics(width, height, P3D);//Depth表示用キャンバスの作成
 }
 
 void draw() {
@@ -148,17 +148,26 @@ void draw() {
 	tool.update();//ツールバーを更新
 
 	background(252, 251, 246);//キャンバス背景色
-	if (!tool.isDragged&&!tool.isDragged2)//ツールバーに重なってないのなら
+	if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
 		data.get(tool.nowDataNumber).draw();//線を描く
+	}
 
 	if (tool.getMode()) {//trueでUseShotMode,falseでTakeShotMode
 		context.update();//カメラ更新用
 		//data内のデータを書き換える
 		// data.get(tool.nowDataNumber).cameraChangeUpdate();
-		//todo
-		//useshot系データの描画
+
+		//DKBKキャンバスの描画
+		cv.beginDraw();
+		float z0 = (height/2)/tan(PI/8);//tan(radian(45/2))を使うと、微妙に数字がズレるのでダメ
+		cv.background(252, 251, 246);//キャンバス背景色
+		cv.perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
+		cv.camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
+		data.get(tool.nowDataNumber).updateDKBKCanvas(cv, context);//キャンバスの表示内容を設定
+		cv.endDraw();
+
 		for (int i=0; i<data.size (); i++) {//各種データの操作と描画
-			data.get(i).update();
+			//			data.get(i).update();
 
 			if (tool.getMovMode()) {//trueで静止画モード,falseで動画モード
 			} else {
@@ -170,9 +179,14 @@ void draw() {
 		take.draw();
 	}
 
+	
+	hint(DISABLE_DEPTH_TEST);//レンダラを2Dに変える
+	image(cv, 60, 0,cv.width/2,cv.height/2);//キャンバスを描画
+	
 	tool.draw();//ツールバーを描画
-
+	hint(ENABLE_DEPTH_TEST);//終了
 	pmousePressed=mousePressed;
+
 }
 
 void mousePressed() {
