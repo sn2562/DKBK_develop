@@ -44,7 +44,7 @@ static int oldToolNumber;
 
 //DKBKキャンバス表示用
 private PGraphics cv;
-private	int[] dkbk_canvas = {100,0,data_width/2,data_height/2};//キャンバスの位置とサイズ
+private	int[] dkbk_canvas = {170,0,int(data_width*screenZoom),int(data_height*screenZoom)};//キャンバスの位置とサイズ
 
 
 String getParentFilePath(String path, int n) {//n階層上のファイルパスを取得
@@ -92,7 +92,7 @@ void setup() {
 	Savepath = path+"/";
 
 	frame.setTitle("DKBK");
-	size(int(640*screenZoom), int(480*screenZoom), P3D);
+	size(dkbk_canvas[0]+dkbk_canvas[2]+60, int(480*screenZoom), P3D);
 	//線の太さ、初期設定は3
 	setLineW=7;
 
@@ -109,22 +109,32 @@ void setup() {
 	} else {
 		data.add(new Data(true));//空のデータを入れておく
 	}
-	//表示について
-	//	perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
-	float z0 = (height/2)/tan(PI/8);//tan(radian(45/2))を使うと、微妙に数字がズレるのでダメ
-	//カメラの位置を決める
-	//	camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
-
 	pmousePressed=false;
 
-	//音源
+	//シャッター音源
 	minim = new Minim( this );
 	song = minim.loadFile( "CameraFlash.wav" );
 
-	cv = createGraphics(data_width, data_height, P3D);//Depth表示用キャンバスの作成
+	//Depth表示用キャンバスの作成
+	cv = createGraphics(data_width, data_height, P3D);
+
+	//通信
+	myclient = new MyClient(this);
 }
 
 void draw() {
+	//背景
+	background(252, 251, 246);
+	stroke(0,0,0);
+	line(width/2,0,width/2,height);
+	line(0,height/2,width,height/2);
+	//	scale(0.5);
+	
+	//タイトル設定
+	frame.setTitle(String.format("DKBK speed:%03d/100 ID:%d member:%d", 
+								 round(100*frameRate/60), 
+								 myclient.client_id, 
+								 myclient.friends.size()));
 
 	frame.setTitle(data.get(tool.nowDataNumber).dataname+" "+round(frameRate));//
 	//フレームの計算
@@ -135,7 +145,6 @@ void draw() {
 		//表示するデータ番号を出力
 		//tool.nowDataNumberを変更する
 		tool.nowDataNumber=frameset%data.size();
-		//println(frameset+":"+tool.moveWriter);
 
 		//表示するデータを変更する draw_modeは0~3
 		for (int i=0; i<data.size (); i++) {
@@ -147,10 +156,10 @@ void draw() {
 	}
 
 	tool.update();//ツールバーを更新
+	myclient.update();//通信用のクライアントを更新
 
-	background(252, 251, 246);//キャンバス背景色
 	if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
-		data.get(tool.nowDataNumber).draw();//線を描く
+		//		data.get(tool.nowDataNumber).draw();//線を描く
 	}
 
 	if (tool.getMode()) {//trueでUseShotMode,falseでTakeShotMode

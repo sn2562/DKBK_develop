@@ -1,29 +1,23 @@
-//撮影したら自動保存
-// path/Users/kawasemi/Dropbox/intraction/***.dsd
-//
-
 import java.awt.FileDialog;
 import java.io.*;
 
-public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
+public class Data {
 	private PVector pos;
 	private float rotX, rotY, rotZ;//回転量
-	private int draw_mode;//写真と線を表示(0) 線だけ表示(1) 深度と線を表示(2) 表示なし(3) 
+	private int draw_mode;//写真と線を表示(0) 線だけ表示(1) 深度と線を表示(2) 表示なし(3)
 
 	private PImage img;
 	private int [] depthMap;
 	private PVector[] realWorldMap, realWorldMap_back;
 	private ArrayList<DT> lines, undo;
 
-	int repoint;//補正を開始した場所(添字)
-
 	public boolean loadAbled=false;//ロードに成功したかどうか。falseのときArrayList<Data>から削除する
 	public boolean defaultData=false;//空のデータであるかどうか。
 	public boolean shouldupdate=false;//回転、移動等したかどうか。射影するときに使う
 	private float RotateMatrix[]=new float[16];//X軸での回転のための行列
 
-	private PVector[] projectionMap;//projectionMapは回転後を見るために使う
-	public String dataname="";
+	//	private PVector[] projectionMap;//projectionMapは回転後を見るために使う
+	public String dataname="";//このデータがもつデータ名
 
 	//	private String Savepath = "/Users/kawasemi/Desktop/dsdData/";//mac版/選択したファイル
 
@@ -32,18 +26,11 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 
 	private void ready() {
 		realWorldMap_back=new PVector[realWorldMap.length];
-		projectionMap=new PVector[realWorldMap.length];
-
 		for (int i=0; i<realWorldMap.length; i++) {
 			realWorldMap_back[i]=new PVector();
 			realWorldMap_back[i].set(realWorldMap[i].x, realWorldMap[i].y, realWorldMap[i].z);
-
-			projectionMap[i]=new PVector();
-			projectionMap[i].set(realWorldMap[i].x, realWorldMap[i].y, realWorldMap[i].z);
 		}
-
 		undo=new ArrayList<DT>();
-
 		draw_mode=0;
 		matrixReset();
 	}
@@ -55,16 +42,8 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		pos=new PVector();
 		lines=new ArrayList<DT>();
 		PGraphics g=createGraphics(640, 480);//疑似画像を作る
-		//    g=createGraphics(width, height);//サイズが640*480意外だとずれる
 		g.beginDraw();
 		g.background(252, 251, 246);
-
-		/*
-    g.rect(0, 0, 100, 100);
-     g.rect(g.width, 0, -100, 100);
-     g.rect(g.width, g.height, -100, -100);
-     g.rect(0, g.height, 100, -100);
-     */
 		g.endDraw();
 		img=g;
 		depthMap=new int[img.width*img.height];
@@ -80,11 +59,9 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 	public Data() {//選択ダイアログを開いて読み込み
 		frame.setTitle("DKBK Now Loading...");
 		FileDialog fd=new FileDialog(frame, "ファイルを選択してください", FileDialog.LOAD);
-		//    fd.setFilenameFilter(getFileExtensionFilter(".dsd"));
 		fd.setVisible(true);
 		if (fd.getFile()==null||fd.getFile().length()==0)
 			return;
-
 		String path=fd.getDirectory()+fd.getFile();
 		pos=new PVector();
 		lines=new ArrayList<DT>();
@@ -96,8 +73,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 
 	//takeshotのデータをそのまま読み込む
 	public Data(PImage timg, int tdepthMap[], PVector[] trealWorldMap) {//takeshotのデータをそのまま読み込む
-		println("takeshotのデータをそのまま読み込む");
-		//frame.setTitle("DKBK Now Loading...");
+		frame.setTitle("DKBK Now Loading...");
 		pos=new PVector();
 		lines=new ArrayList<DT>();
 
@@ -109,14 +85,12 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		realWorldMap=new PVector[img.width*img.height];
 		realWorldMap_back=new PVector[img.width*img.height];
 		for (int i=0; i<tdepthMap.length; i++) {
-			//println("depthmapを再構築");
 			depthMap[i]=tdepthMap[i];
 		}
 
 		for (int i=0; i<trealWorldMap.length; i++) {
 			realWorldMap[i]=trealWorldMap[i];
 		}
-
 
 		for (int i=0; i<realWorldMap.length; i++) {
 			realWorldMap_back[i]=new PVector();
@@ -163,9 +137,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 					for (int iy=-10; iy<=10; iy++)//iy<10まで(まわりの値もとるため)
 						for (int ix=-10; ix<=10; ix++) {//ix<10まで(まわりの値もとるため)
 							if (0<=x+ix&&x+ix<img.width&&0<=y+iy&&iy+y<img.height) {//画像範囲内のときだけ処理を実行
-								//              if (depthMap[(y+iy)*img.width+(x+ix)]!=0) {
 								if (realWorldMap[(y+iy)*img.width+(x+ix)].z!=0) {//データがあれば
-									//                sum+=depthMap[(y+iy)*img.width+(x+ix)];
 									if (mouseButton==LEFT)
 										sum+=realWorldMap[(y+iy)*img.width+(x+ix)].z;//もしクリックしたらsum値を変更
 									else
@@ -192,13 +164,20 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			lines.get(n).addAll(lines.remove(n+1));//前のと後ろのを結合
 		}
 		undo.add(0, lines.remove(lines.size()-1));
+		myclient.undo();
 	}
 	public void undo() {//やり直し
-		if (undo.size()>0)
-			lines.add(undo.remove(0));
+		if (undo.size()>0) {
+			DT l = undo.remove(0);
+			myclient.addLine(l.c, l.w);
+			for (PVector p : l)
+				myclient.addPoint(p);
+			lines.add(l);
+		}
 	}
 	public void clear() {//全消去
 		lines.clear();
+		myclient.delete();
 	}
 	public void undoclear() {
 		undo.clear();
@@ -393,46 +372,38 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		//no1. 描画領域上のmouseX,mouseY -> キャンバス上座標
 		p.x = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
 		p.y = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
-		
+
 		//no2. キャンバス上座標 -> img上座標
 		p.x=(int)map(p.x, 0, cv.width, 0, img.width);//キャンバス上のマウス座標を画像上の位置に変換する
 		p.y=(int)map(p.y, 0, cv.height, 0, img.height);
-		
+
 		int[] calc = {int(p.x),int(p.y)};//キャンバスの位置とサイズ
 		return calc;
 	}
 
 	public void addDKBKLine(PGraphics cv){
+		//マウス座標を画像上座標に置き換える
 		int x = convartMousePoints(cv)[0];
 		int y = convartMousePoints(cv)[1];
 
-		if (tool.getPenColorNum()>1) {//色選択
-			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));//色をiconの色に変更
+		if (tool.getPenColorNum()>1) {//色をiconの色に変更
+			//			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));//色をiconの色に変更
 
 		} else if (tool.getPenColorNum()==0) {//写真スポイト
 			tool.penColor[0]=img.get(x,y);
-			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
+			//			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
 
 		} else if (tool.getPenColorNum()==1) {//写真スポイト(ランダム)
 			tool.penColor[1]=img.get(
 				int(random(0, img.width)), 
 				int(random(0, img.height))
 			);
-			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
+			//			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
 		}
-		undoclear();
-	}
+		lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
+		myclient.addLine(tool.getPenColor(), tool.getPenWeight());
 
-	public void addLine() {//太さ、色を指定して新しいlineを追加する
-		switch(tool.nowToolNumber) {
-			case 0://データとして線を追加
-				break;
-			case 1://データとしてスプレーを追加->線を追加
-				//lines.add(new Spray(tool.getPenColor(), tool.getPenWeight()));
-				lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
-				undoclear();
-				break;
-		}
+		undoclear();
 	}
 
 	public boolean moveAble() {
@@ -442,19 +413,15 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		draw_mode=(draw_mode+1)%4;
 	}
 
-	public void d() {
-		//		drawLine();
-	}
-
-	private void addPoint(PGraphics cv) {//キャンバス上の座標が入る
+	private void addPoint(PGraphics cv) {
+		//マウス座標を画像上座標に置き換える
 		int x = convartMousePoints(cv)[0];
 		int y = convartMousePoints(cv)[1];
-		
+
 		try {//たまにArrayIndexOutOfBoundsExceptionでるのでその例外をはじいておく。
+
 			//			if (tool.pointOver(x, y)) return;//ツールバーに重なってないなら続ける
 			boolean dp=isDefaultPosition();
-			x=(int)map(x, 0, cv.width, 0, img.width);//キャンバス上のマウス座標を画像上の位置に変換する
-			y=(int)map(y, 0, cv.height, 0, img.height);
 			if (x<0||y<0||x>width||y>height)return;//画面外に書いていたら何もしない
 			int idx=x+y*img.width;//マウス位置を計算する
 			if (idx<0||idx>realWorldMap.length)return;//配列の範囲外だったら何もしない
@@ -470,39 +437,12 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 				} else {
 					p=calcRealPoint(LENGTH*5, x, y);
 				}
-				//println("p.z==0でした");
 			}
 			if (tool.getSpoit()!=0) {//深度がスポイトしてあるなら
 				p=calcRealPoint(tool.getSpoit(), x, y);
-			} else {
 			}
 
-			//てすと成功
-			//println("狂っているかtest:x "+p.x+" y "+p.y+" z "+p.z);//この時点では狂ってない
 
-			/****************** モデル座標-スクリーン座標 *****************
-
-       ****************************************************************/
-			//2.作成したprojectionMapからマウスのx,yに対応する点pvを得る
-
-			//回転していてかつスポイトしていないとき
-			/*
-      if (!(pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {//回転している
-       PVector pv = new PVector(projectionMap[idx].x, projectionMap[idx].y, projectionMap[idx].z);
-       if (tool.getSpoit()==0) {//スポイトしてない時
-       //3. 2で取得できたpv(x,y,z)をunProjectScreenに入れて、モデル内座標を得る
-       pv.set(unprojectScreen(pv));
-       } else {
-       pv.z=tool.getSpoit();//zの値だけスポイトの値に置き換える
-       }
-       p.set(pv);
-
-       }
-       */
-			//println("補正前 "+p.x+" "+p.y+" "+p.z);
-
-
-			//if ((pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {//回転していないなら
 			if (line.size()>0&&tool.nowToolNumber==0) {//線を描いていたら,かつ補正ペンなら
 				PVector pp=line.get(line.size()-1);
 				float ax=pp.x+pos.x;
@@ -511,20 +451,8 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 
 				if (new PVector(ax, ay, az).dist(p)>tool.getBorder()) {//距離が大きすぎるようなら前の点の座標のを利用(補正する)
 					p=calcRealPoint(az, x, y);
-					//補正前と補正後の差　pp-p
-					//PVector dpv=PVector.sub(pp, p);//ダブル補正用
-					//println("補正前と補正後の差"+dpv);
-
-					//println("追加点 "+p.x+" "+p.y+" "+p.z);
 				}
 			}
-			//      if (line.size()>0&&tool.nowToolNumber==1) {//線を描いていたら,かつ補正ペンBなら
-			//        PVector pp=line.get(line.size()-1);
-			//        if (pp.dist(p)>tool.getBorder()) {//距離が大きすぎるようなら前の点の座標のを利用(補正する)
-			//          p=calcRealPoint(pp.z, x, y);
-			//        }
-			//      }
-			//}
 
 			if (!(pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {//もし移動されていたら、位置を計算しなおして入れとく
 				p=reCalcPoint(p);//再計算すると狂う
@@ -548,7 +476,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			println(frameCount, x, y);
 			e.printStackTrace();
 		}
-		//println("   end addPoint");
 	}
 
 	public void cutLine(int px, int py, int x, int y) {//二次元に射影して、それとマウスの軌跡との交差判定を行い、切断する
@@ -584,34 +511,29 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 
 	private boolean load(String path) {
 		try {
-			//もし読み込みファイルが.dsd.pngで終わるようならば.pngを消して読み込みしてみる
 			boolean userImage=false;
 
-			if (path.endsWith(".dsd.png")) {
-				println("画像の読み込みです");
-				path = path.replaceAll(".png", "");
+			//選択ファイルが.dsd.pngで終わるようならばパスを.dsdになるように再設定
+			if (path.endsWith(".dsd.png")) {//画像読み込み
+				path = path.replaceAll(".png", "");//.pngを消す
 				userImage=true;
 			}
-
 			File f=new File(path);
-
 			if (!f.exists()) {
 				System.err.println("読み込みに失敗しました。");
 				System.err.println(f.getAbsolutePath()+"\nは存在しません。");
 				return false;
 			}
-
 			if (!f.canRead()) {
 				System.err.println("読み込みに失敗しました。");
 				System.err.println("読み込むことのできないファイルです。");
 				return false;
 			}
 
+			//データ名を設定
 			String[] splitpath = splitTokens(path, "/");
-			println("dataname2 "+splitpath[splitpath.length-1]);
+			println("dataname "+splitpath[splitpath.length-1]);
 			dataname=splitpath[splitpath.length-1];     
-
-
 			ObjectInputStream is=new ObjectInputStream(new FileInputStream(f));
 
 			//ファイルからオブジェクトを読み込む
@@ -640,11 +562,8 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 				}
 			}
 
-			img=createImage(w, h, ARGB);//画像を扱うためのバッファを作る
-			//			println("つくったがぞうさいず"+w+" "+height);
-			//img.pixels=c;//バッファの色データを読み込んだオブジェで書き換える
+			img=createImage(w, h, ARGB);//画像を扱うためのバッファを作るえる
 			img.pixels=c;//バッファの色データを読み込んだオブジェで書き換える
-
 
 			//得られた情報から画像データを作成
 			if (userImage) {//選択データが画像だった時
@@ -656,9 +575,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			} else {
 				img.pixels=c;
 			}
-
 			is.close();//使い終わったら閉める
-
 			return true;
 		}
 		catch(Exception e) {
@@ -667,6 +584,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			return false;
 		}
 	}
+
 	private void save() {
 		frame.setTitle("保存中");
 		try {

@@ -64,8 +64,6 @@ public class TakeShot {
 		if (depthMap[idx]==0) {
 			text(depthMap[idx], mouseX, mouseY);
 		}
-		//特例的にuseshotの線画を表示する
-		data.get(tool.nowDataNumber).d();
 		hint(ENABLE_DEPTH_TEST);//終了
 	}
 
