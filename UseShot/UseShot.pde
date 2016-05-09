@@ -190,9 +190,6 @@ void draw() {
 
 void mousePressed() {
 	if (tool.getMode()) {
-		if (!tool.pointOver(mouseX, mouseY)) {//ツールバーに重なってないのなら
-			data.get(tool.nowDataNumber).addLine();//線を追加
-		}
 	} else {//ツールバーに重なっていたら
 		take.mousePressed();
 	}
@@ -209,7 +206,9 @@ void mousePressed() {
 
 	if(mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
 	   mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]){//DKBKキャンバス上ならば
-		data.get(tool.nowDataNumber).addLine();//新しい線を追加
+		if(tool.getMode()){//UseShotモード
+			data.get(tool.nowDataNumber).addDKBKLine(cv);//新しい線を追加
+		}
 	}
 }
 
@@ -243,31 +242,25 @@ void mouseDragged() {
 	if(mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
 	   mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]){//DKBKキャンバス上ならば
 		if (tool.getMode()) {
-			//			if (!tool.isDragged&&!tool.isDragged2) {//ツールバーに重なってないのなら
-			
-			//領域上の座標をキャンバス上の座標に変換する
-			int canvas_mx = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
-			int canvas_my = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
-			switch(tool.nowToolNumber) {
-				case 0://補正ペン
-					data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
-					break;
-				case 1://スプレー改
-					data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
-					break;
-				case 2://カッター
-					data.get(tool.nowDataNumber).cutLine(pmouseX, pmouseY, mouseX, mouseY);
-					break;
+			if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
+
+				//領域上の座標をキャンバス上の座標に変換する
+				int canvas_mx = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
+				int canvas_my = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
+				switch(tool.nowToolNumber) {
+					case 0://補正ペン
+						data.get(tool.nowDataNumber).addPoint(cv);
+						break;
+					case 1://スプレー改
+						data.get(tool.nowDataNumber).addPoint(cv);
+						break;
+					case 2://カッター
+						data.get(tool.nowDataNumber).cutLine(pmouseX, pmouseY, mouseX, mouseY);
+						break;
+				}
 			}
-			//			}
 		}
-
 	}
-
-
-	//	if ( mouseButton == RIGHT ) //右ボタンが押されたときに太さを変更する
-	//		setLineW=12;//それ以外は細く
-
 	if ( mouseButton == RIGHT ) {//右クリックをしていたら
 		//閲覧操作
 		//回転か並行かを判定する
@@ -291,26 +284,9 @@ void mouseDragged() {
 	} else {//それ以外
 		//ツールごとの設定
 		if (tool.getMode()) {
-			if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
-				//領域上の座標をキャンバス上の座標に変換する
-			int canvas_mx = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
-			int canvas_my = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
-				
-				
+			if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なっていたらやらない
+
 				switch(tool.nowToolNumber) {
-					case 0://補正ペン
-						//println("tool.nowToolNumberを表示"+tool.nowToolNumber);
-						//if ( mouseButton == RIGHT )
-						//println("直線");
-						//else
-						data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
-						break;
-					case 1://スプレー改
-						data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
-						break;
-					case 2://カッター
-						data.get(tool.nowDataNumber).cutLine(pmouseX, pmouseY, mouseX, mouseY);
-						break;
 					case 4://移動
 						//移動量を出力
 						//						data.get(tool.nowDataNumber).printTR();
@@ -353,6 +329,7 @@ void mouseDragged() {
 						break;
 				}
 			}
+
 		}
 	}
 }

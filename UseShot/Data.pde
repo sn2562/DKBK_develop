@@ -329,6 +329,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		cv.translate(0, 0, -1000);
 		cv.translate(pos.x, pos.y, pos.z);
 	}
+
 	public void updateDKBKCanvas(PGraphics cv, SimpleOpenNI context) {
 		pushMatrix();
 		//描画モードによって表示内容を変える
@@ -345,7 +346,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 				cv.tint(255, 255);//透明度を元に戻す
 				cv.hint(ENABLE_DEPTH_TEST);//終了
 				break;
-
 			case 1:
 				setCanvasMatrix(cv);
 				cv.noFill();
@@ -365,12 +365,12 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 					cv.strokeWeight(1);
 				}
 				break;
-
 			case 2:
 				setCanvasMatrix(cv);
 				cv.strokeWeight(4);
-				for (int y=0; y < img.height; y+=K) {
-					for (int x=0; x < img.width; x+=K) {
+				int step = 10;
+				for (int y=0; y < img.height; y+=step) {
+					for (int x=0; x < img.width; x+=step) {
 						int index = x + y * img.width;
 						PVector p=realWorldMap_back[index];
 						if (p.z > 0) { 
@@ -386,15 +386,31 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		}
 		popMatrix();
 	}
-	public void addDKBKLine(PGraphics cv,int x,int y){
+
+	//描画領域上のmouseX,mouseYをimg上の座標に変換
+	private int[] convartMousePoints(PGraphics cv){
+		PVector p = new PVector(0,0);
+		//no1. 描画領域上のmouseX,mouseY -> キャンバス上座標
+		p.x = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
+		p.y = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
+		
+		//no2. キャンバス上座標 -> img上座標
+		p.x=(int)map(p.x, 0, cv.width, 0, img.width);//キャンバス上のマウス座標を画像上の位置に変換する
+		p.y=(int)map(p.y, 0, cv.height, 0, img.height);
+		
+		int[] calc = {int(p.x),int(p.y)};//キャンバスの位置とサイズ
+		return calc;
+	}
+
+	public void addDKBKLine(PGraphics cv){
+		int x = convartMousePoints(cv)[0];
+		int y = convartMousePoints(cv)[1];
+
 		if (tool.getPenColorNum()>1) {//色選択
 			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));//色をiconの色に変更
 
 		} else if (tool.getPenColorNum()==0) {//写真スポイト
-			tool.penColor[0]=img.get(
-				int(map(mouseX, 0, cv.width, 0, img.width)), 
-				int(map(mouseY, 0, cv.height, 0, img.height))
-			);
+			tool.penColor[0]=img.get(x,y);
 			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
 
 		} else if (tool.getPenColorNum()==1) {//写真スポイト(ランダム)
@@ -410,22 +426,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 	public void addLine() {//太さ、色を指定して新しいlineを追加する
 		switch(tool.nowToolNumber) {
 			case 0://データとして線を追加
-				if (tool.getPenColorNum()>1) {//color cがスポイトじゃないなら
-					lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));//色をiconの色に変更
-				} else if (tool.getPenColorNum()==0) {//写真スポイト
-					tool.penColor[0]=img.get(
-						int(map(mouseX, 0, width, 0, img.width)), 
-						int(map(mouseY, 0, height, 0, img.height))
-					);
-					lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
-				} else if (tool.getPenColorNum()==1) {//写真スポイト2.ランダム
-					tool.penColor[1]=img.get(
-						int(random(0, img.width)), 
-						int(random(0, img.height))
-					);
-					lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
-				}
-				undoclear();
 				break;
 			case 1://データとしてスプレーを追加->線を追加
 				//lines.add(new Spray(tool.getPenColor(), tool.getPenWeight()));
@@ -443,12 +443,15 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 	}
 
 	public void d() {
-//		drawLine();
+		//		drawLine();
 	}
 
-	private void addPoint(PGraphics cv,int x, int y) {//キャンバス上の座標が入る
+	private void addPoint(PGraphics cv) {//キャンバス上の座標が入る
+		int x = convartMousePoints(cv)[0];
+		int y = convartMousePoints(cv)[1];
+		
 		try {//たまにArrayIndexOutOfBoundsExceptionでるのでその例外をはじいておく。
-//			if (tool.pointOver(x, y)) return;//ツールバーに重なってないなら続ける
+			//			if (tool.pointOver(x, y)) return;//ツールバーに重なってないなら続ける
 			boolean dp=isDefaultPosition();
 			x=(int)map(x, 0, cv.width, 0, img.width);//キャンバス上のマウス座標を画像上の位置に変換する
 			y=(int)map(y, 0, cv.height, 0, img.height);

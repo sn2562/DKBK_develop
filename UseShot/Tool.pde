@@ -316,7 +316,6 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 				song.play();//play SE
 			}
 			if (!movButton.no) movButton.setSelected(true);
-			;//枠線をつける
 			if (movButton.no) data.get(nowDataNumber).saveSketch();//自動保存
 			//写真をとったらツールを鉛筆に変更する
 			toolButton[nowToolNumber].setSelected(false);//現在のボタンの選択を解除
