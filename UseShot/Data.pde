@@ -313,7 +313,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		for (int i=0; i<trealWorldMap.length; i++) {
 			realWorldMap[i]=trealWorldMap[i];
 		}
-		
+
 		for (int i=0; i<realWorldMap.length; i++) {
 			realWorldMap_back[i]=new PVector();
 			realWorldMap_back[i].set(realWorldMap[i].x, realWorldMap[i].y, realWorldMap[i].z);
@@ -345,7 +345,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 				cv.tint(255, 255);//透明度を元に戻す
 				cv.hint(ENABLE_DEPTH_TEST);//終了
 				break;
-				
+
 			case 1:
 				setCanvasMatrix(cv);
 				cv.noFill();
@@ -362,13 +362,12 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 						cv.vertex(p.x, p.y, p.z);//vertex一回だとなぜか線をsize()==2の時なぜか線を書いてくれない
 					}
 					cv.endShape();
-					//drawArea();
 					cv.strokeWeight(1);
 				}
 				break;
+
 			case 2:
 				setCanvasMatrix(cv);
-
 				cv.strokeWeight(4);
 				for (int y=0; y < img.height; y+=K) {
 					for (int x=0; x < img.width; x+=K) {
@@ -376,20 +375,39 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 						PVector p=realWorldMap_back[index];
 						if (p.z > 0) { 
 							cv.stroke(img.pixels[index]);
-							cv.point(p.x, p.y, p.z);// make realworld z negative, in the 3d drawing coordsystem +z points in the direction of the eye
+							cv.point(p.x, p.y, p.z);
 						}
 					}
 				}
 				cv.strokeWeight(1);
 				break;
 			case 3:
-
 				break;
 		}
 		popMatrix();
 	}
+	public void addDKBKLine(PGraphics cv,int x,int y){
+		if (tool.getPenColorNum()>1) {//色選択
+			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));//色をiconの色に変更
 
-	public void addLine() {//mousePressed時に呼ぶ
+		} else if (tool.getPenColorNum()==0) {//写真スポイト
+			tool.penColor[0]=img.get(
+				int(map(mouseX, 0, cv.width, 0, img.width)), 
+				int(map(mouseY, 0, cv.height, 0, img.height))
+			);
+			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
+
+		} else if (tool.getPenColorNum()==1) {//写真スポイト(ランダム)
+			tool.penColor[1]=img.get(
+				int(random(0, img.width)), 
+				int(random(0, img.height))
+			);
+			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
+		}
+		undoclear();
+	}
+
+	public void addLine() {//太さ、色を指定して新しいlineを追加する
 		switch(tool.nowToolNumber) {
 			case 0://データとして線を追加
 				if (tool.getPenColorNum()>1) {//color cがスポイトじゃないなら
@@ -425,150 +443,15 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 	}
 
 	public void d() {
-		drawLine();
+//		drawLine();
 	}
 
-	private void drawLine() {
-		noFill();
-		for (DT line : lines) {
-			//if (!line.ableDraw())continue;
-			stroke(line.c);
-			strokeWeight(line.w);
-			if (line.beginShape()==-1)
-				beginShape();
-			else
-				beginShape(line.beginShape());
-			for (PVector p : line) {
-				vertex(p.x, p.y, p.z);
-				vertex(p.x, p.y, p.z);//vertex一回だとなぜか線をsize()==2の時なぜか線を書いてくれない
-			}
-			endShape();
-			//drawArea();
-			strokeWeight(1);
-		}
-	}
-
-	private void drawArea() {//選択中のデータの周りに線を表示する
-
-		noFill();
-		stroke(100, 100, 255);
-		strokeWeight(4);
-
-		//手前
-		beginShape();
-		vertex(-width/3, -height/3, 400);
-		vertex(width/3, -height/3, 400);
-		vertex(width/3, height/3, 400);
-		vertex(-width/3, height/3, 400);
-		endShape(CLOSE);
-
-		stroke(200, 200, 255);
-
-		//おく
-		beginShape();
-		vertex(-width*2.5, -height*2.5, 6000);
-		vertex(width*2.5, -height*2.5, 6000);
-		vertex(width*2.5, height*2.5, 6000);
-		vertex(-width*2.5, height*2.5, 6000);
-		endShape(CLOSE);
-	}
-	private void drawDepthData() {//深度データを描画する
-
-		if (tool.nowToolNumber==4) {
-			noFill();
-			stroke(255);
-			box(100, 500, 100);
-		}
-		int K=4;
-		strokeWeight(K);
-		for (int y=0; y < img.height; y+=K) {
-			for (int x=0; x < img.width; x+=K) {
-				int index = x + y * img.width;
-				PVector p=realWorldMap_back[index];
-				if (p.z > 0) { 
-					stroke(img.pixels[index]);
-
-					point(p.x, p.y, p.z);  // make realworld z negative, in the 3d drawing coordsystem +z points in the direction of the eye
-				}
-			}
-		}
-		strokeWeight(1);
-	}
-	//todo mouseX,mouseYを受け取って、キャンバス位置PVector x,y,z を返す
-	public PVector PCanvas(int x, int y) {
-
+	private void addPoint(PGraphics cv,int x, int y) {//キャンバス上の座標が入る
 		try {//たまにArrayIndexOutOfBoundsExceptionでるのでその例外をはじいておく。
-			if (tool.pointOver(x, y)) return new PVector(0, 0, 0);//ツールバーに重なってないなら続ける
+//			if (tool.pointOver(x, y)) return;//ツールバーに重なってないなら続ける
 			boolean dp=isDefaultPosition();
-			x=(int)map(x, 0, width, 0, img.width);//マウス座標を画像上の位置に変換する
-			y=(int)map(y, 0, height, 0, img.height);
-			if (x<0||y<0||x>width||y>height)return  new PVector(0, 0, 0);//画面外に書いていたら何もしない
-			int idx=x+y*img.width;//マウス位置を計算する
-			if (idx<0||idx>realWorldMap.length)return new PVector(0, 0, 0);//配列の範囲外だったら何もしない
-			PVector p=new PVector();//追加するベクトル
-			p.set(realWorldMap_back[idx].x, realWorldMap_back[idx].y, realWorldMap_back[idx].z);
-
-			ArrayList<PVector>line=lines.get(lines.size()-1);//一番最後の線
-			if (p.z==0) {
-				//if (dp)return;
-				//todo 回転操作をしている時もうまく行えるように
-
-				if (!(pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {//もし移動されていたら、位置を計算しなおして入れとく
-				} else {
-					p=calcRealPoint(LENGTH*5, x, y);
-				}
-				//println("p.z==0でした");
-			}
-			if (tool.getSpoit()!=0) {//深度がスポイトしてあるなら
-				p=calcRealPoint(tool.getSpoit(), x, y);
-			}
-
-			if (line.size()>0&&tool.nowToolNumber==0) {//線を描いていたら,かつ補正ペンなら
-				PVector pp=line.get(line.size()-1);
-				float ax=pp.x+pos.x;
-				float ay=pp.y+pos.y;
-				float az=pp.z+pos.z;
-				if (new PVector(ax, ay, az).dist(p)>tool.getBorder()) {//距離が大きすぎるようなら前の点の座標のを利用(補正する)
-					p=calcRealPoint(az, x, y);
-				}
-			}
-
-			if (!(pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {//もし移動されていたら、位置を計算しなおして入れとく
-				p=reCalcPoint(p);//再計算すると狂う
-			}
-			if (tool.getPenColorNum()>=4) {//color cがスポイトじゃないなら
-				if (tool.getPenWeight()<5) {//細い線なら
-					//細い線は手前にずらす
-					p.z=p.z-5;
-				} else {
-					println("太い線");
-				}
-			}
-			return p;
-		}
-		catch(Exception e) {
-			println(frameCount, x, y);
-			e.printStackTrace();
-		}
-
-		return new PVector(0, 0, 0);//ダミー
-	}
-
-
-	private void addPoint(int x, int y) {//マウスの座標が入る
-		/*
-    if (!(pos.x==0&&pos.y==0&&pos.z==0&&abs(sin(rotX-PI))<0.01&&abs(sin(rotY-PI))<0.01)) {
-     //今は視点が初期状態じゃない時にはかけないようにしとく。
-     println("Not Default Matrix.");
-     return;
-     }
-     */
-		//println("   start addPoint");
-		try {//たまにArrayIndexOutOfBoundsExceptionでるのでその例外をはじいておく。
-			if (tool.pointOver(x, y)) return;//ツールバーに重なってないなら続ける
-			boolean dp=isDefaultPosition();
-			x=(int)map(x, 0, width, 0, img.width);//マウス座標を画像上の位置に変換する
-			y=(int)map(y, 0, height, 0, img.height);
+			x=(int)map(x, 0, cv.width, 0, img.width);//キャンバス上のマウス座標を画像上の位置に変換する
+			y=(int)map(y, 0, cv.height, 0, img.height);
 			if (x<0||y<0||x>width||y>height)return;//画面外に書いていたら何もしない
 			int idx=x+y*img.width;//マウス位置を計算する
 			if (idx<0||idx>realWorldMap.length)return;//配列の範囲外だったら何もしない
@@ -755,7 +638,7 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 			}
 
 			img=createImage(w, h, ARGB);//画像を扱うためのバッファを作る
-//			println("つくったがぞうさいず"+w+" "+height);
+			//			println("つくったがぞうさいず"+w+" "+height);
 			//img.pixels=c;//バッファの色データを読み込んだオブジェで書き換える
 			img.pixels=c;//バッファの色データを読み込んだオブジェで書き換える
 
@@ -1041,12 +924,6 @@ public class Data {//DepthDatadrawを並列処理にすれば軽くなるか？
 		RotateMatrix[13]=m31;
 		RotateMatrix[14]=m32;
 		RotateMatrix[15]=m33;
-	}
-
-
-	public void printTR() {
-		print("pos :"+pos);
-		println(" rot"+rotX+" "+rotY+" "+rotZ);
 	}
 }
 

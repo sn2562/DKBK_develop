@@ -42,8 +42,10 @@ AudioPlayer song;
 SimpleOpenNI context;//カメラ更新用
 static int oldToolNumber;
 
-//キャンバス表示用
+//DKBKキャンバス表示用
 private PGraphics cv;
+private	int[] dkbk_canvas = {100,0,data_width/2,data_height/2};//キャンバスの位置とサイズ
+
 
 String getParentFilePath(String path, int n) {//n階層上のファイルパスを取得
 	File f=new File(path);
@@ -108,10 +110,10 @@ void setup() {
 		data.add(new Data(true));//空のデータを入れておく
 	}
 	//表示について
-//	perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
+	//	perspective(PI/4, float(width)/float(height), 10, 150000);//視野角は45度
 	float z0 = (height/2)/tan(PI/8);//tan(radian(45/2))を使うと、微妙に数字がズレるのでダメ
 	//カメラの位置を決める
-//	camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
+	//	camera(width/2, height/2, z0, width/2, height/2, 0, 0, 1, 0);
 
 	pmousePressed=false;
 
@@ -178,25 +180,15 @@ void draw() {
 		take.draw();
 	}
 
-	
+
 	hint(DISABLE_DEPTH_TEST);//レンダラを2Dに変える
-	image(cv, 60, 0,cv.width/2,cv.height/2);//キャンバスを描画
-	
+	image(cv, dkbk_canvas[0], dkbk_canvas[1],dkbk_canvas[2],dkbk_canvas[3]);//キャンバスを描画
 	tool.draw();//ツールバーを描画
 	hint(ENABLE_DEPTH_TEST);//終了
 	pmousePressed=mousePressed;
-
 }
 
 void mousePressed() {
-	//検証用
-	//  println(tool.nowToolNumber);
-
-	//切り替え
-
-	//線の太さをペンのボタンで変更する
-	setLineW=13;//それ以外は細く
-
 	if (tool.getMode()) {
 		if (!tool.pointOver(mouseX, mouseY)) {//ツールバーに重なってないのなら
 			data.get(tool.nowDataNumber).addLine();//線を追加
@@ -213,6 +205,11 @@ void mousePressed() {
      //data.get(tool.nowDataNumber).changeDrawMode();
      }
      */
+	}
+
+	if(mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
+	   mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]){//DKBKキャンバス上ならば
+		data.get(tool.nowDataNumber).addLine();//新しい線を追加
 	}
 }
 
@@ -243,9 +240,33 @@ void keyReleased(java.awt.event.KeyEvent e) {
 
 //マウスの操作
 void mouseDragged() {
+	if(mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
+	   mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]){//DKBKキャンバス上ならば
+		if (tool.getMode()) {
+			//			if (!tool.isDragged&&!tool.isDragged2) {//ツールバーに重なってないのなら
+			
+			//領域上の座標をキャンバス上の座標に変換する
+			int canvas_mx = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
+			int canvas_my = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
+			switch(tool.nowToolNumber) {
+				case 0://補正ペン
+					data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
+					break;
+				case 1://スプレー改
+					data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
+					break;
+				case 2://カッター
+					data.get(tool.nowDataNumber).cutLine(pmouseX, pmouseY, mouseX, mouseY);
+					break;
+			}
+			//			}
+		}
 
-	if ( mouseButton == RIGHT ) //右ボタンが押されたときに太さを変更する
-		setLineW=12;//それ以外は細く
+	}
+
+
+	//	if ( mouseButton == RIGHT ) //右ボタンが押されたときに太さを変更する
+	//		setLineW=12;//それ以外は細く
 
 	if ( mouseButton == RIGHT ) {//右クリックをしていたら
 		//閲覧操作
@@ -270,24 +291,29 @@ void mouseDragged() {
 	} else {//それ以外
 		//ツールごとの設定
 		if (tool.getMode()) {
-			if (!tool.isDragged&&!tool.isDragged2)//ツールバーに重なってないのなら
+			if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
+				//領域上の座標をキャンバス上の座標に変換する
+			int canvas_mx = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
+			int canvas_my = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
+				
+				
 				switch(tool.nowToolNumber) {
 					case 0://補正ペン
 						//println("tool.nowToolNumberを表示"+tool.nowToolNumber);
 						//if ( mouseButton == RIGHT )
 						//println("直線");
 						//else
-						data.get(tool.nowDataNumber).addPoint(mouseX, mouseY);
+						data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
 						break;
 					case 1://スプレー改
-						data.get(tool.nowDataNumber).addPoint(mouseX, mouseY);
+						data.get(tool.nowDataNumber).addPoint(cv,canvas_mx, canvas_my);
 						break;
 					case 2://カッター
 						data.get(tool.nowDataNumber).cutLine(pmouseX, pmouseY, mouseX, mouseY);
 						break;
 					case 4://移動
 						//移動量を出力
-						data.get(tool.nowDataNumber).printTR();
+						//						data.get(tool.nowDataNumber).printTR();
 						//検証用2
 						if (keyEvent==null) {//起動直後
 							//回転か並行かを判定する
@@ -326,6 +352,7 @@ void mouseDragged() {
 						}
 						break;
 				}
+			}
 		}
 	}
 }
