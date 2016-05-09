@@ -129,7 +129,7 @@ void draw() {
 	line(width/2,0,width/2,height);
 	line(0,height/2,width,height/2);
 	//	scale(0.5);
-	
+
 	//タイトル設定
 	frame.setTitle(String.format("DKBK speed:%03d/100 ID:%d member:%d", 
 								 round(100*frameRate/60), 
@@ -156,7 +156,6 @@ void draw() {
 	}
 
 	tool.update();//ツールバーを更新
-	myclient.update();//通信用のクライアントを更新
 
 	if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
 		//		data.get(tool.nowDataNumber).draw();//線を描く
@@ -175,6 +174,11 @@ void draw() {
 		cv.camera(data_width/2, data_height/2, z0, data_width/2, data_height/2, 0, 0, 1, 0);
 		data.get(tool.nowDataNumber).updateDKBKCanvas(cv, context);//キャンバスの表示内容を設定
 		cv.endDraw();
+
+		//通信中のクライアントの内容を描画
+		myclient.update(cv);//通信用のクライアントを更新
+
+
 
 		for (int i=0; i<data.size (); i++) {//各種データの操作と描画
 			//			data.get(i).update();

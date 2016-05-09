@@ -471,6 +471,7 @@ public class Data {
 			}
 
 			line.add(p);//線に点を追加
+			myclient.addPoint(p);
 		}
 		catch(Exception e) {
 			println(frameCount, x, y);
