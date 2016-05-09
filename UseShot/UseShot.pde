@@ -42,6 +42,9 @@ AudioPlayer song;
 SimpleOpenNI context;//カメラ更新用
 static int oldToolNumber;
 
+//キャンバス表示用
+private PGraphics cv;
+
 String getParentFilePath(String path, int n) {//n階層上のファイルパスを取得
 	File f=new File(path);
 	for (int i=0; i<n; i++)
@@ -84,7 +87,7 @@ void setup() {
 		File newfile1 = new File(path);
 		newfile1.mkdir();
 	}
-	Savepath = path;
+	Savepath = path+"/";
 
 
 	frame.setTitle("DKBK");
