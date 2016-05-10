@@ -6,11 +6,8 @@ import ddf.minim.*;
 import ddf.minim.analysis.*;
 import ddf.minim.ugens.*;
 import ddf.minim.effects.*;
-
 import java.awt.event.*;
 import processing.event.MouseEvent;
-
-//更新のじどうか
 import SimpleOpenNI.*;
 
 String FilePath1;//始めにロードするデータとLキー押した時に読むデータのパスを入れ解くためのやつ(debug用)
@@ -49,7 +46,9 @@ static int oldToolNumber;
 
 //DKBKキャンバス表示用
 private PGraphics cv;
-private	int[] dkbk_canvas = {130,0,int(data_width*screenZoom),int(data_height*screenZoom)};//キャンバスの位置とサイズ
+private	int[] dkbk_canvas = {
+	130, 0, int(data_width*screenZoom), int(data_height*screenZoom)
+};//キャンバスの位置とサイズ
 //ツールバー表示用
 //private PGraphics tcv;
 
@@ -86,7 +85,7 @@ void setup() {
 	} else if (osname.matches("^.*WINDOWS.*")) {
 		path = sketchPath+"/"+dirName;//Windowsの場合
 		println("Win");
-	} else{
+	} else {
 		path = sketchPath+"/"+dirName;//Macの場合
 	}
 	File file = new File(path);
@@ -107,7 +106,7 @@ void setup() {
 
 	FilePath1=dataPath("")+"/todai_horiken7.dsd";
 
-	tool=new Tool(width-61,60)	;//ツールバー tool(x座標,幅)
+	tool=new Tool(width-61, 60)	;//ツールバー tool(x座標,幅)
 	take=new TakeShot(this);//テイクショット
 
 	//初期データの読み込み
@@ -134,7 +133,6 @@ void setup() {
 void draw() {
 	//背景
 	background(252, 251, 246);
-	//	scale(0.5);
 
 	//タイトル設定
 	frame.setTitle(String.format("DKBK speed:%03d/100 ID:%d member:%d", 
@@ -163,7 +161,7 @@ void draw() {
 
 	tool.update();//ツールバーを更新
 
-	if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
+	if (!tool.isDragged&&!tool.isDragged2) {//ツールバーに重なってないのなら
 		//		data.get(tool.nowDataNumber).draw();//線を描く
 	}
 
@@ -201,7 +199,7 @@ void draw() {
 
 
 	hint(DISABLE_DEPTH_TEST);//レンダラを2Dに変える
-	image(cv, dkbk_canvas[0], dkbk_canvas[1],dkbk_canvas[2],dkbk_canvas[3]);//キャンバスを描画
+	image(cv, dkbk_canvas[0], dkbk_canvas[1], dkbk_canvas[2], dkbk_canvas[3]);//キャンバスを描画
 	tool.draw();//ツールバーを描画
 	hint(ENABLE_DEPTH_TEST);//終了
 	pmousePressed=mousePressed;
@@ -223,20 +221,20 @@ void mousePressed() {
      */
 	}
 
-	if(mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
-	   mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]){//DKBKキャンバス上ならば
-		if(tool.getMode()){//UseShotモード
+	if (mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
+		mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]) {//DKBKキャンバス上ならば
+		if (tool.getMode()) {//UseShotモード
 			data.get(tool.nowDataNumber).addDKBKLine(cv);//新しい線を追加
 		}
 	}
 }
 
 void mouseWheel(MouseEvent event) {
-	if(mouseX<100){
+	if (mouseX<100) {
 		float e = event.getCount();
-		if(scrollY<0){
+		if (scrollY<0) {
 			scrollY = scrollY+e;
-		}else{
+		} else {
 			scrollY = -1;
 		}
 	}
@@ -269,10 +267,10 @@ void keyReleased(java.awt.event.KeyEvent e) {
 
 //マウスの操作
 void mouseDragged() {
-	if(mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
-	   mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]){//DKBKキャンバス上ならば
+	if (mouseX>dkbk_canvas[0] && mouseX<dkbk_canvas[0]+dkbk_canvas[2] && 
+		mouseY>dkbk_canvas[1] && mouseY<dkbk_canvas[1]+dkbk_canvas[3]) {//DKBKキャンバス上ならば
 		if (tool.getMode()) {
-			if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なってないのなら
+			if (!tool.isDragged&&!tool.isDragged2) {//ツールバーに重なってないのなら
 
 				//領域上の座標をキャンバス上の座標に変換する
 				int canvas_mx = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
@@ -314,7 +312,7 @@ void mouseDragged() {
 	} else {//それ以外
 		//ツールごとの設定
 		if (tool.getMode()) {
-			if (!tool.isDragged&&!tool.isDragged2){//ツールバーに重なっていたらやらない
+			if (!tool.isDragged&&!tool.isDragged2) {//ツールバーに重なっていたらやらない
 
 				switch(tool.nowToolNumber) {
 					case 4://移動
@@ -359,7 +357,6 @@ void mouseDragged() {
 						break;
 				}
 			}
-
 		}
 	}
 }
@@ -428,7 +425,7 @@ public void keyPressed(java.awt.event.KeyEvent e) {
 				break;
 			case 'P'://データをpcdとして書き出す
 				println("make pcd data");
-				printPCD();
+				//      printPCD();
 				//data.get(tool.nowDataNumber).saveJsonData();
 				data.get(tool.nowDataNumber).saveJsonArrayData();
 
@@ -444,55 +441,15 @@ public void keyPressed(java.awt.event.KeyEvent e) {
 				println("animationの切り替え animation:"+animation);
 				//println("");
 				break;
-
+			case'M':
+				uniteAllData();//データマージ
+				break;
 			default:
 				break;
 		}
 	}
 }
 
-public void printPCD() {
-	println("printPCD");
-	StringList l = new StringList();
-	int linenum=0;
-	//pcl用のヘッダを追加
-	l.append("VERSION .7");
-	l.append("FIELDS x y z rgb");
-	l.append("SIZE 4 4 4 4");
-	l.append("TYPE F F F F");
-	l.append("COUNT 1 1 1 1");
-	/*
-       l.append("WIDTH "+str(data_width/2));
-   l.append("HEIGHT "+str(data_height/2));
-   */
-	l.append("WIDTH 1");
-	l.append("HEIGHT 1");
-	l.append("VIEWPOINT 0 0 0 1 0 0 0");
-	l.append("POINTS 0");
-	l.append("DATA ascii");
-	//realWorldPointの中身をすべて出力
-	int W=data.get(tool.nowDataNumber).getW();//データの幅
-	int H=data.get(tool.nowDataNumber).getH();//データの高さ
-	for (int y=0; y < H; y+=3) {//3ずつ読み込み
-		for (int x=0; x < W; x+=3) {//3ずつ読み込み
-			int index = x + y * W;//インデックスを計算する
-			PVector realWorldPoint = data.get(tool.nowDataNumber).getVector(index);//realWorldMap_backのindexの値を取得する
-			if (realWorldPoint.z > 0) {//もしポイントのｚの値が0以上なら
-				linenum++;//linenumを1増やす
-				l.append(str(realWorldPoint.x)+" "+str(realWorldPoint.y)+" "+str(realWorldPoint.z)+" "+"4.2108e+06");//値のx座標,y座標,z座標,色情報を書き込む
-			}
-		}
-	}
-	for (int i=linenum; linenum!=data_width*data_height/4; linenum++) {
-		l.append("");
-	}
-	l.set(5, "WIDTH "+linenum);//5行目に行数を書く
-	l.set(8, "POINTS "+linenum);//8行目にポイント数の合計を書く
-	saveStrings("data/PointCroudData.pcd", l.array());//pcdデータの書き出し
-	saveStrings("data/PointCroudData.txt", l.array());//txtデータの書き出し(確認用)
-	println("end : printPCD");
-	return;
-}
 
 void stop() {
 	song.close();
@@ -500,3 +457,82 @@ void stop() {
 	super.stop();
 }
 
+public void uniteAllData() {
+	println("==uniteAllData==");
+	Data d=new Data(true);//結合用データ
+	if (d.loadAbled) {
+		data.add(d);//ロードに成功したときのみリストに追加
+
+		//既に読み込まれているデータの数だけ繰り返す
+		for (int i=0; i<data.size ()-1; i++) {
+			//回転角と移動量を取り出す
+			PVector pos = data.get(i).getTranslateParam();
+			PVector rotate = data.get(i).getRotateParam();
+			println("pos "+pos+"  rotate "+rotate);
+
+			//lines,色,太さを取り出す
+			for (DT line : data.get (i).getLines()) {
+				//線を追加
+				data.get(data.size()-1).addUniteLine(cv, line.c, line.w);//新しい線を追加
+
+				for (PVector p : line) {
+					//座標を変換する
+					p=reCalcPoint(p, pos, rotate.x, rotate.y, rotate.z);//再計算すると狂う
+					data.get(data.size()-1).addUnitePoint(p);
+				}
+			}
+
+			//結合用データに追加する
+		}
+		tool.nowDataNumber=data.size()-1;//現在の操作データを切り替える
+	}
+}
+private PVector reCalcPoint(PVector p, PVector pos, float rotX, float rotY, float rotZ) {
+	//一度x軸の回転をリセットする -PI
+	//x軸
+
+	//  rotX = rotX-PI;
+	//  ans.set(calcRotate(ans, 
+	//  1, 0, 0, 0, 
+	//  0, cos(rotX), -sin(rotX), 0, 
+	//  0, sin(rotX), cos(rotX), 0, 
+	//  0, 0, 0, 1));
+
+
+	//y軸
+	//  ans.set(calcRotate(ans, 
+	//  cos(rotY), 0, sin(rotY), 0, 
+	//  0, 1, 0, 0, 
+	//  -sin(rotY), 0, cos(rotY), 0, 
+	//  0, 0, 0, 1));
+	
+	p.set(calcTranslate(p,pos));
+
+	return p;
+}
+
+private PVector calcRotate(PVector p, 
+						   float m00, float m01, float m02, float m03, 
+						   float m10, float m11, float m12, float m13, 
+						   float m20, float m21, float m22, float m23, 
+						   float m30, float m31, float m32, float m33 ) {
+
+	float RotateMatrix[]=new float[16];//X軸での回転のための行列
+
+	//与えられた点を回転して、移動後の位置を返す
+	PVector calcP=new PVector();//返す用
+
+	calcP.x = p.x*m00 + p.y*m01 + p.z*m02 + 1*m03;//x座標
+	calcP.y = p.x*m10 + p.y*m11 + p.z*m12 + 1*m13;//y座標
+	calcP.z = p.x*m20 + p.y*m21 + p.z*m22 + 1*m23;//z座標
+
+	return calcP;
+}
+
+private PVector calcTranslate(PVector p, PVector pos){
+	p.x=p.x+pos.x;
+	p.y=p.y+pos.y;
+	p.z=p.z+pos.z;
+	return p;
+
+}

@@ -108,4 +108,8 @@ public class Line extends DT implements Serializable {
 
 		return true;
 	}
+	
+	public PVector getLine(){
+		return p1;
+	}
 }

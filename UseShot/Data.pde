@@ -316,7 +316,7 @@ public class Data {
 		//	1 スケッチの表示
 		//	2 深度データの表示
 		//	3 非表示
-		switch(draw_mode){
+		switch(draw_mode) {
 			case 0:
 				cv.hint(DISABLE_DEPTH_TEST);//レンダラを2Dに変える
 				//画像を描画-ただし、さっきまで画面に表示されていたカメラの写真に変更されている
@@ -324,30 +324,19 @@ public class Data {
 				cv.image(img, 0, 0, cv.width, cv.height);//画像データの表示
 				cv.tint(255, 255);//透明度を元に戻す
 				cv.hint(ENABLE_DEPTH_TEST);//終了
+
+				setCanvasMatrix(cv);
+				drawSketch(cv);//スケッチ描画
 				break;
 			case 1:
 				setCanvasMatrix(cv);
-				cv.noFill();
-				for (DT line : lines) {
-					//if (!line.ableDraw())continue;
-					cv.stroke(line.c);
-					cv.strokeWeight(line.w);
-					if (line.beginShape()==-1)
-						cv.beginShape();
-					else
-						cv.beginShape(line.beginShape());
-					for (PVector p : line) {
-						cv.vertex(p.x, p.y, p.z);
-						cv.vertex(p.x, p.y, p.z);//vertex一回だとなぜか線をsize()==2の時なぜか線を書いてくれない
-					}
-					cv.endShape();
-					cv.strokeWeight(1);
-				}
+				drawSketch(cv);//スケッチ描画
+
 				break;
 			case 2:
 				setCanvasMatrix(cv);
 				cv.strokeWeight(4);
-				int step = 10;
+				int step = 5;
 				for (int y=0; y < img.height; y+=step) {
 					for (int x=0; x < img.width; x+=step) {
 						int index = x + y * img.width;
@@ -358,6 +347,7 @@ public class Data {
 						}
 					}
 				}
+				drawSketch(cv);//スケッチ描画
 				cv.strokeWeight(1);
 				break;
 			case 3:
@@ -365,10 +355,28 @@ public class Data {
 		}
 		popMatrix();
 	}
+	private void drawSketch(PGraphics cv) {
+		cv.noFill();
+		for (DT line : lines) {
+			cv.stroke(line.c);
+			cv.strokeWeight(line.w);
+			if (line.beginShape()==-1)
+				cv.beginShape();
+			else
+				cv.beginShape(line.beginShape());
+			for (PVector p : line) {
+				cv.vertex(p.x, p.y, p.z);
+				cv.vertex(p.x, p.y, p.z);//vertex一回だとなぜか線をsize()==2の時なぜか線を書いてくれない
+			}
+			cv.endShape();
+			cv.strokeWeight(1);
+		}
+	}
+
 
 	//描画領域上のmouseX,mouseYをimg上の座標に変換
-	private int[] convartMousePoints(PGraphics cv){
-		PVector p = new PVector(0,0);
+	private int[] convartMousePoints(PGraphics cv) {
+		PVector p = new PVector(0, 0);
 		//no1. 描画領域上のmouseX,mouseY -> キャンバス上座標
 		p.x = (int)map(mouseX, dkbk_canvas[0], dkbk_canvas[0]+dkbk_canvas[2], 0, cv.width);
 		p.y = (int)map(mouseY, dkbk_canvas[1], dkbk_canvas[1]+dkbk_canvas[3], 0, cv.height);
@@ -377,22 +385,22 @@ public class Data {
 		p.x=(int)map(p.x, 0, cv.width, 0, img.width);//キャンバス上のマウス座標を画像上の位置に変換する
 		p.y=(int)map(p.y, 0, cv.height, 0, img.height);
 
-		int[] calc = {int(p.x),int(p.y)};//キャンバスの位置とサイズ
+		int[] calc = {
+			int(p.x), int(p.y)
+		};//キャンバスの位置とサイズ
 		return calc;
 	}
 
-	public void addDKBKLine(PGraphics cv){
+	public void addDKBKLine(PGraphics cv) {
 		//マウス座標を画像上座標に置き換える
 		int x = convartMousePoints(cv)[0];
 		int y = convartMousePoints(cv)[1];
 
 		if (tool.getPenColorNum()>1) {//色をiconの色に変更
 			//			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));//色をiconの色に変更
-
 		} else if (tool.getPenColorNum()==0) {//写真スポイト
-			tool.penColor[0]=img.get(x,y);
+			tool.penColor[0]=img.get(x, y);
 			//			lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
-
 		} else if (tool.getPenColorNum()==1) {//写真スポイト(ランダム)
 			tool.penColor[1]=img.get(
 				int(random(0, img.width)), 
@@ -402,8 +410,15 @@ public class Data {
 		}
 		lines.add(new Line(tool.getPenColor(), tool.getPenWeight()));
 		myclient.addLine(tool.getPenColor(), tool.getPenWeight());
-
 		undoclear();
+	}
+	public void addUniteLine(PGraphics cv, color c, int w) {
+		lines.add(new Line(c, w));
+		undoclear();
+	}
+	public void addUnitePoint(PVector p) {
+		ArrayList<PVector>line=lines.get(lines.size()-1);//一番最後の線
+		line.add(p);//線に点を追加
 	}
 
 	public boolean moveAble() {
@@ -761,6 +776,16 @@ public class Data {
 		return new PVector(x, y, z);
 	}
 
+	public PVector getTranslateParam() {//移動量と回転角度を返す
+		return pos;
+	}
+	public PVector getRotateParam() {//移動量と回転角度を返す
+		return new PVector(rotX, rotY, rotZ);
+	}
+	public ArrayList<DT> getLines() {
+		return lines;
+	}
+
 
 
 	public float myScreenZ(float x, float y, float z) {//スクリーンからのZ教理を求めようとしてみたやつ。うまくいってない。
@@ -931,3 +956,4 @@ PVector unprojectScreen(PVector v) {
 
 	return p;
 }
+
