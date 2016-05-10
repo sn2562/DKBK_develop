@@ -139,7 +139,7 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		//		takeButton = new RoundButton(loadImage("icon-cng1.png"), width-20, 10, 150);
 
 		Y=Y+26+13; 
-		chgCanvasButton = new ImButton(loadImage("icon-anim.png"), 6, Y, 48, 24);
+		chgCanvasButton = new ImButton(loadImage("icon-chgCV.png"), 6, Y, 48, 24);
 
 		String t[]=loadStrings("system.ini");
 		keyConfig=t[0].toCharArray();//キーコンフィグの読み込み
@@ -471,10 +471,16 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		toolButton_chg.draw(mouseX-getX(), mouseY-getY());
 		//		takeButton.draw(mouseX-getX(), mouseY-getY());
 		chgCanvasButton.draw(mouseX-getX(), mouseY-getY());
+
 		//サムネイルボタン
+		pushMatrix();
+		tint(255, 120);//半透明にする
+		translate(0,scrollY);
 		for (int i=0; i<tnButton.length; i++){
 			tnButton[i].draw(mouseX-getX(), mouseY-getY());
 		}
+		tint(255, 255);//透明度を元に戻す
+		popMatrix();
 
 		fill(0);
 		if (spoit!=0) {//スポイトが0出ない時スポイト量を表示する

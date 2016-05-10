@@ -49,7 +49,7 @@ static int oldToolNumber;
 
 //DKBKキャンバス表示用
 private PGraphics cv;
-private	int[] dkbk_canvas = {160,0,int(data_width*screenZoom),int(data_height*screenZoom)};//キャンバスの位置とサイズ
+private	int[] dkbk_canvas = {130,0,int(data_width*screenZoom),int(data_height*screenZoom)};//キャンバスの位置とサイズ
 //ツールバー表示用
 //private PGraphics tcv;
 
@@ -134,9 +134,6 @@ void setup() {
 void draw() {
 	//背景
 	background(252, 251, 246);
-	stroke(0,0,0);
-	line(width/2,0,width/2,height);
-	line(0,height/2,width,height/2);
 	//	scale(0.5);
 
 	//タイトル設定
@@ -234,18 +231,16 @@ void mousePressed() {
 	}
 }
 
-//void mouseWheel(MouseEvent event) {
-//	if(mouseX<100){
-//		float e = event.getCount();
-//		println(e);
-//		scrollY=scrollY+e;
-//		if(e>0){
-//			//		scrollY=scrollY+e;
-//		}else{
-//			//		scrollY=scrollY-e;
-//		}
-//	}
-//}
+void mouseWheel(MouseEvent event) {
+	if(mouseX<100){
+		float e = event.getCount();
+		if(scrollY<0){
+			scrollY = scrollY+e;
+		}else{
+			scrollY = -1;
+		}
+	}
+}
 
 void mouseReleased() {
 	//回転操作をリセットする
@@ -475,7 +470,6 @@ public void printPCD() {
 	l.append("VIEWPOINT 0 0 0 1 0 0 0");
 	l.append("POINTS 0");
 	l.append("DATA ascii");
-
 	//realWorldPointの中身をすべて出力
 	int W=data.get(tool.nowDataNumber).getW();//データの幅
 	int H=data.get(tool.nowDataNumber).getH();//データの高さ
@@ -489,13 +483,11 @@ public void printPCD() {
 			}
 		}
 	}
-
 	for (int i=linenum; linenum!=data_width*data_height/4; linenum++) {
 		l.append("");
 	}
 	l.set(5, "WIDTH "+linenum);//5行目に行数を書く
 	l.set(8, "POINTS "+linenum);//8行目にポイント数の合計を書く
-
 	saveStrings("data/PointCroudData.pcd", l.array());//pcdデータの書き出し
 	saveStrings("data/PointCroudData.txt", l.array());//txtデータの書き出し(確認用)
 	println("end : printPCD");
