@@ -1,5 +1,6 @@
 //import java.applet.*;
 //import java.awt.*;
+import java.awt.event.*;
 public class Tool extends Button {//ツールバー,ボタンをextendsしてるのはmouseOverを楽にとるため
 	private Button moveBar;//ドラッグしてツールバーを動かすためのボタン
 	private ImButton[] editButton, colorButton, axisButton, toolButton, dataButton, fileButton, thicknessButton;//各種ボタン
@@ -10,7 +11,8 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 	private ImButton animButton;//スケッチのアニメーションボタン
 	private ImButton chgCanvasButton;//キャンバス変更ボタン
 
-//	private RoundButton takeButton;//撮影用の丸ボタン
+	//	private RoundButton takeButton;//撮影用の丸ボタン
+	private ImButton[] tnButton;//サムネイルボタン thumbnail
 
 	private color[] penColor;//ペン色 ロードした画像データから取得する
 	public int nowColorNumber, nowAxisNumber, nowToolNumber, nowDataNumber, nowThicknessNumber;//ボタンの選択状態
@@ -24,13 +26,26 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 	public int animMode;
 	private boolean moveMode;//移動方法,trueのときは回転移
 
+
 	private int clicknum=0;//クリック回数の記録
 
 	private char keyConfig[];
-	float Y;//ツールバーの高さ
+	float Y;//ツールバーの位置調整用
+
+
+	//サムネイルボタン
+	private FileList fl;
+	private int imgNum = 0;
+	private String path = "/Users/kawasemi/Desktop";//データが格納されているフォルダのパス
+	private int DataNum = 0;
 
 	public Tool(int x, int w) {
 		super(x, 0, w, height);//全体の大きさ
+
+		//サムネイルデータの数
+		fl = new FileList(Savepath);
+		println("filelist "+fl.getFileList().length);
+		addTNButtonFromFilelist(fl.getFileList());
 
 		PImage g;
 		//最初に選んでおくボタン
@@ -45,7 +60,6 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		dataButton=new ImButton[2];
 		fileButton=new ImButton[3];
 		thicknessButton=new ImButton[2];
-
 		penColor=new color[colorButton.length];
 		pos=new PVector();
 		rotX=rotY=rotZ=0;
@@ -122,7 +136,7 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		Y=Y+26+13;
 		animButton=new ImButton(loadImage("icon-anim.png"), 6, Y, 48, 24);
 
-//		takeButton = new RoundButton(loadImage("icon-cng1.png"), width-20, 10, 150);
+		//		takeButton = new RoundButton(loadImage("icon-cng1.png"), width-20, 10, 150);
 
 		Y=Y+26+13; 
 		chgCanvasButton = new ImButton(loadImage("icon-anim.png"), 6, Y, 48, 24);
@@ -357,40 +371,40 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		}
 
 		//撮影ボタン
-//		takeButton.update(mouseX-getX(), mouseY-getY());
-//		if (takeButton.isPressed) {
-//
-//			takeButton.setSelected(false);
-//			println("clicked");
-//
-//			//=====
-//
-//			println("カメラ-キャンバスの切り替え");
-//			movButton.setSelected(false);
-//			movButton.no=!movButton.no;
-//			println(movButton.no);
-//			if (movButton.no) {
-//				song.rewind();//reload to play
-//				song.play();//play SE
-//			}
-//
-//			if (!movButton.no) movButton.setSelected(true);
-//			//枠線をつける
-//			if (movButton.no) data.get(nowDataNumber).saveSketch();//自動保存
-//			//写真をとったらツールを鉛筆に変更する
-//			toolButton[nowToolNumber].setSelected(false);//現在のボタンの選択を解除
-//			//移動ボタンの表示を非表示に設定
-//			toolButton_chg.setSelected(false);
-//			nowToolNumber=0;//ツールを鉛筆に変更
-//			toolButton[nowToolNumber].setSelected(true);//選択表示を鉛筆に変更
-//
-//
-//			if (oldToolNumber==tool.nowToolNumber) {//もし複数回クリックならば
-//				println("切り替えボタン/複数回クリック:number"+oldToolNumber);
-//			} else {
-//				UseShot.oldToolNumber=nowToolNumber;
-//			}
-//		}
+		//		takeButton.update(mouseX-getX(), mouseY-getY());
+		//		if (takeButton.isPressed) {
+		//
+		//			takeButton.setSelected(false);
+		//			println("clicked");
+		//
+		//			//=====
+		//
+		//			println("カメラ-キャンバスの切り替え");
+		//			movButton.setSelected(false);
+		//			movButton.no=!movButton.no;
+		//			println(movButton.no);
+		//			if (movButton.no) {
+		//				song.rewind();//reload to play
+		//				song.play();//play SE
+		//			}
+		//
+		//			if (!movButton.no) movButton.setSelected(true);
+		//			//枠線をつける
+		//			if (movButton.no) data.get(nowDataNumber).saveSketch();//自動保存
+		//			//写真をとったらツールを鉛筆に変更する
+		//			toolButton[nowToolNumber].setSelected(false);//現在のボタンの選択を解除
+		//			//移動ボタンの表示を非表示に設定
+		//			toolButton_chg.setSelected(false);
+		//			nowToolNumber=0;//ツールを鉛筆に変更
+		//			toolButton[nowToolNumber].setSelected(true);//選択表示を鉛筆に変更
+		//
+		//
+		//			if (oldToolNumber==tool.nowToolNumber) {//もし複数回クリックならば
+		//				println("切り替えボタン/複数回クリック:number"+oldToolNumber);
+		//			} else {
+		//				UseShot.oldToolNumber=nowToolNumber;
+		//			}
+		//		}
 		chgCanvasButton.update(mouseX-getX(), mouseY-getY());
 		if(chgCanvasButton.isPressed){
 			println("キャンバスの表示切り替え");
@@ -399,8 +413,14 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 			else
 				tool.matrixReset();
 			chgCanvasButton.setSelected(false);
-
-
+		}
+		//サムネイルボタン
+		for (int i=0; i<tnButton.length; i++) {
+			tnButton[i].update(mouseX-getX(), mouseY-getY()-scrollY);
+			if (tnButton[i].isPressed) {
+				tnButton[i].setSelected(false);
+				println(i+" : 押されました");
+			}
 		}
 
 	}
@@ -449,8 +469,12 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 		resetMoveButton.draw(mouseX-getX(), mouseY-getY());
 		animButton.draw(mouseX-getX(), mouseY-getY());
 		toolButton_chg.draw(mouseX-getX(), mouseY-getY());
-//		takeButton.draw(mouseX-getX(), mouseY-getY());
+		//		takeButton.draw(mouseX-getX(), mouseY-getY());
 		chgCanvasButton.draw(mouseX-getX(), mouseY-getY());
+		//サムネイルボタン
+		for (int i=0; i<tnButton.length; i++){
+			tnButton[i].draw(mouseX-getX(), mouseY-getY());
+		}
 
 		fill(0);
 		if (spoit!=0) {//スポイトが0出ない時スポイト量を表示する
@@ -494,6 +518,35 @@ public class Tool extends Button {//ツールバー,ボタンをextendsしてる
 	}
 	private void undo() {
 		data.get(nowDataNumber).undo();
+	}
+
+	//サムネイルボタンを作る
+	private void addTNButtonFromFilelist(String[] fileArray){
+		if (fileArray != null) {
+			//画像の枚数をカウントする
+			for(int i = 0; i < fileArray.length; i++) {
+				if(match(fileArray[i], ".png") != null)
+					imgNum++;
+				//TODO : nullだった時(画像じゃない時)はその要素を配列から消しておきたい 
+			}
+			//画像付きボタンを作成する
+			tnButton = new ImButton[imgNum];
+
+			imgNum=0;
+			//画像だった時にサムネイルを作成する
+			PImage g;
+			for(int i = 0; i < fileArray.length; i++) {//二度目
+				if(match(fileArray[i], ".png") != null){
+					//画像付きボタンを作成する
+					g=loadImage(Savepath+fileArray[i]);//画像の読み込み
+					g.resize(0,100);//画像のリサイズ
+					tnButton[imgNum]=new ImButton(g, -width+60, imgNum*100);//TODO 
+					imgNum++;
+				}
+			}
+		} else{
+			println("この階層には何もありません");
+		}
 	}
 
 	public void shortCut(int e) {//ショートカットキー

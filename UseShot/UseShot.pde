@@ -7,6 +7,9 @@ import ddf.minim.analysis.*;
 import ddf.minim.ugens.*;
 import ddf.minim.effects.*;
 
+import java.awt.event.*;
+import processing.event.MouseEvent;
+
 //更新のじどうか
 import SimpleOpenNI.*;
 
@@ -22,6 +25,8 @@ final float screenZoom=1.5;//1.8;//描画範囲の倍率//1.5普段使い//1.2//
 
 private TakeShot take;//データの保存に利用
 private Tool tool;//ツールバー
+
+
 private boolean pmousePressed;
 
 static ArrayList<Data> data;//扱っているデータを格納しておく場所
@@ -44,7 +49,11 @@ static int oldToolNumber;
 
 //DKBKキャンバス表示用
 private PGraphics cv;
-private	int[] dkbk_canvas = {170,0,int(data_width*screenZoom),int(data_height*screenZoom)};//キャンバスの位置とサイズ
+private	int[] dkbk_canvas = {160,0,int(data_width*screenZoom),int(data_height*screenZoom)};//キャンバスの位置とサイズ
+//ツールバー表示用
+//private PGraphics tcv;
+
+float scrollY=0;
 
 
 String getParentFilePath(String path, int n) {//n階層上のファイルパスを取得
@@ -224,6 +233,19 @@ void mousePressed() {
 		}
 	}
 }
+
+//void mouseWheel(MouseEvent event) {
+//	if(mouseX<100){
+//		float e = event.getCount();
+//		println(e);
+//		scrollY=scrollY+e;
+//		if(e>0){
+//			//		scrollY=scrollY+e;
+//		}else{
+//			//		scrollY=scrollY-e;
+//		}
+//	}
+//}
 
 void mouseReleased() {
 	//回転操作をリセットする

@@ -24,7 +24,7 @@ public class Friend {
 	public void update(PGraphics cv) {
 		pushMatrix();
 		//    tool.setMatrix();
-
+		cv.beginDraw();
 		cv.translate(data_width/2, data_height/2);
 		//現在選択中のレイヤー分の移動
 		cv.rotateX(data.get(tool.nowDataNumber).rotX);
@@ -35,7 +35,6 @@ public class Friend {
 		cv.translate(data.get(tool.nowDataNumber).pos.x, data.get(tool.nowDataNumber).pos.y, data.get(tool.nowDataNumber).pos.z);
 
 		//描画部分 DKBKキャンバスに追加
-		cv.beginDraw();
 		cv.noFill();
 		for (DT line : lines) {
 			cv.stroke(line.c);
@@ -48,8 +47,8 @@ public class Friend {
 			cv.endShape();
 			cv.strokeWeight(1);
 		}
-		cv.fill(255,0,0);
-		cv.sphere(38);
+//		cv.fill(255,0,0);
+//		cv.sphere(38);
 		cv.endDraw();
 		popMatrix();
 	}
